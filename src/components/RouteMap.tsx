@@ -120,11 +120,11 @@ export const RouteMap: React.FC<RouteMapProps> = ({
       }).addTo(map);
     }
 
-    // Pan & Zoom to selected day
-    if (selectedDay && !selectedDay.isTravelDay && selectedDay.coords) {
-      map.setView([selectedDay.coords.lat, selectedDay.coords.lng], 7, {
+    // Pan & Zoom smoothly to selected day centered in middle
+    if (selectedDay && selectedDay.coords) {
+      map.flyTo([selectedDay.coords.lat, selectedDay.coords.lng], 5.8, {
         animate: true,
-        duration: 0.6
+        duration: 1.5
       });
 
       if (markersRef.current[selectedDay.dayNumber]) {
@@ -135,16 +135,25 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   }, [days, selectedDayNumber]);
 
   return (
-    <div id="route-map-container" className="space-y-3 animate-in fade-in duration-200">
+    <div id="route-map-container" className="flex flex-col h-[calc(100vh-140px)] sm:h-[calc(100vh-150px)] gap-2 animate-in fade-in duration-200">
       
-      {/* Top Map Navigator Toolbar */}
-      <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
+      {/* Top Map Navigator Toolbar with Destination & Stay Info */}
+      <div className="bg-white rounded-2xl p-2.5 px-3 shadow-sm border border-slate-200 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
           <Navigation className="w-4 h-4 text-indigo-600 shrink-0" />
           <div className="min-w-0">
-            <h2 className="text-xs font-bold text-slate-900 truncate">
-              Day {selectedDay.dayNumber}: {selectedDay.destinationName} ({selectedDay.country})
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                Day {selectedDay.dayNumber}: {selectedDay.destinationName}
+              </h2>
+              <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 hidden xs:inline">
+                {selectedDay.flag} {selectedDay.country}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] text-indigo-700 font-medium truncate mt-0.5">
+              <Hotel className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+              <span className="truncate">Stay: {selectedDay.hotel}</span>
+            </div>
           </div>
         </div>
 
@@ -154,6 +163,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
             disabled={selectedDayNumber <= 1}
             onClick={() => onSelectDayNumber(selectedDayNumber - 1)}
             className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-colors disabled:opacity-30"
+            title="Previous Day"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -166,34 +176,16 @@ export const RouteMap: React.FC<RouteMapProps> = ({
             disabled={selectedDayNumber >= days.length}
             onClick={() => onSelectDayNumber(selectedDayNumber + 1)}
             className="p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-30 shadow-sm"
+            title="Next Day"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Map Container */}
-      <div className="relative bg-slate-100 rounded-2xl overflow-hidden shadow-md border border-slate-300 h-[380px] sm:h-[460px]">
+      {/* Full Remaining Screen Map Container */}
+      <div className="relative bg-slate-100 rounded-2xl overflow-hidden shadow-md border border-slate-300 flex-1 w-full min-h-[350px]">
         <div ref={mapContainerRef} className="w-full h-full z-0"></div>
-
-        {/* Floating Selected Day Card */}
-        <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-xl p-3 shadow-lg border border-slate-200 z-10 space-y-1">
-          <div className="flex items-center justify-between gap-1">
-            <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-              Day {selectedDay.dayNumber} Stop
-            </span>
-            <span className="text-[11px] font-bold text-slate-600">
-              {selectedDay.flag} {selectedDay.country}
-            </span>
-          </div>
-          <h3 className="text-xs font-bold text-slate-900 truncate">
-            {selectedDay.destinationName} — {selectedDay.title}
-          </h3>
-          <div className="text-[10px] font-medium text-indigo-900 bg-indigo-50 p-1.5 rounded flex items-center gap-1">
-            <Hotel className="w-3 h-3 text-indigo-600 shrink-0" />
-            <span className="truncate">Stay: {selectedDay.hotel}</span>
-          </div>
-        </div>
       </div>
 
     </div>
