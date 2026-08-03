@@ -18,6 +18,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [dayNum: number]: L.Marker }>({});
+  const polylineRef = useRef<L.Polyline | null>(null);
 
   const selectedDay = days.find(d => d.dayNumber === selectedDayNumber) || days[0];
 
@@ -50,6 +51,12 @@ export const RouteMap: React.FC<RouteMapProps> = ({
     (Object.values(markersRef.current) as L.Marker[]).forEach(m => m.remove());
     markersRef.current = {};
 
+    // Clear existing polyline
+    if (polylineRef.current) {
+      polylineRef.current.remove();
+      polylineRef.current = null;
+    }
+
     // Collect valid coordinates for polylines (excluding long distance flight days)
     const routeCoords: [number, number][] = [];
 
@@ -69,62 +76,64 @@ export const RouteMap: React.FC<RouteMapProps> = ({
           <div style="
             background-color: ${isSelected ? '#f59e0b' : color};
             color: #ffffff;
-            width: ${isSelected ? '32px' : '24px'};
-            height: ${isSelected ? '32px' : '24px'};
+            width: ${isSelected ? '28px' : '22px'};
+            height: ${isSelected ? '28px' : '22px'};
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: ${isSelected ? '13px' : '11px'};
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-            border: ${isSelected ? '3px solid #ffffff' : '2px solid #ffffff'};
+            font-size: ${isSelected ? '12px' : '10px'};
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: ${isSelected ? '2.5px solid #ffffff' : '2px solid #ffffff'};
             transition: all 0.2s ease;
           ">
             ${day.dayNumber}
           </div>
         `,
-        iconSize: [isSelected ? 32 : 24, isSelected ? 32 : 24],
-        iconAnchor: [isSelected ? 16 : 12, isSelected ? 16 : 12]
+        iconSize: [isSelected ? 28 : 22, isSelected ? 28 : 22],
+        iconAnchor: [isSelected ? 14 : 11, isSelected ? 14 : 11]
       });
 
       const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
       
       const popupContent = `
-        <div style="font-family: system-ui, sans-serif; padding: 2px; max-width: 180px;">
-          <div style="font-size: 10px; font-weight: bold; color: #4f46e5; text-transform: uppercase;">
-            Day ${day.dayNumber} • ${day.country}
+        <div style="font-family: system-ui, sans-serif; padding: 0px 2px; max-width: 140px; text-align: center;">
+          <div style="font-size: 9px; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.3px;">
+            Day ${day.dayNumber}
           </div>
-          <div style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 1px;">
+          <div style="font-size: 11px; font-weight: 700; color: #0f172a; line-height: 1.2; margin-top: 1px;">
             ${day.destinationName}
-          </div>
-          <div style="font-size: 11px; color: #475569; margin-top: 2px;">
-            ${day.title}
           </div>
         </div>
       `;
 
-      marker.bindPopup(popupContent);
+      marker.bindPopup(popupContent, {
+        closeButton: false,
+        offset: [0, -8],
+        autoPan: false
+      });
+
       marker.on('click', () => onSelectDayNumber(day.dayNumber));
 
       markersRef.current[day.dayNumber] = marker;
     });
 
-    // Draw Tour Route Polyline
+    // Draw Tour Route Polyline (single instance)
     if (routeCoords.length > 1) {
-      L.polyline(routeCoords, {
+      polylineRef.current = L.polyline(routeCoords, {
         color: '#4f46e5',
         weight: 3,
-        opacity: 0.7,
+        opacity: 0.75,
         dashArray: '6, 6'
       }).addTo(map);
     }
 
-    // Pan & Zoom smoothly to selected day centered in middle
+    // Pan & Zoom smoothly to selected day centered in middle with optimal fast duration
     if (selectedDay && selectedDay.coords) {
       map.flyTo([selectedDay.coords.lat, selectedDay.coords.lng], 5.8, {
         animate: true,
-        duration: 1.5
+        duration: 0.7
       });
 
       if (markersRef.current[selectedDay.dayNumber]) {
