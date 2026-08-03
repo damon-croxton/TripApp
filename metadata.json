@@ -1,0 +1,6 @@
+{
+  "name": "Parents' UK & Ireland Tour Companion",
+  "description": "A parent-friendly travel companion for the 15-Day TripADeal England, Ireland & Scotland tour with daily highlights, interactive route map, calendar, and essential travel tips.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
